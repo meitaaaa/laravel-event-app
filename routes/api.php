@@ -19,6 +19,7 @@ Route::get('/events', [EventController::class, 'index']);
 Route::get('/events/{event}', [EventController::class, 'show']);
 Route::get('/certificates/search', [CertificateController::class, 'search']);
 Route::get('/events/{event}/attendance/status', [AttendanceController::class, 'status']);
+Route::get('/certificates/{certificate}/download', [CertificateController::class, 'download']);
 
 Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     // peserta
@@ -26,6 +27,8 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
     Route::post('/events/{event}/attendance', [AttendanceController::class, 'submit']);
     Route::get('/me/history', [RegistrationController::class, 'myHistory']);
     Route::get('/me/certificates', [CertificateController::class, 'myCertificates']);
+    Route::post('/registrations/{registration}/generate-certificate', [CertificateController::class, 'generate']);
+    Route::get('/registrations/{registration}/certificate-status', [CertificateController::class, 'status']);
 
     // admin-only
     Route::middleware('can:admin')->group(function () {
@@ -38,5 +41,6 @@ Route::middleware(['auth:sanctum', 'inactivity'])->group(function () {
         Route::get('/admin/reports/monthly-attendees', [AdminReportController::class, 'monthlyAttendees']);
         Route::get('/admin/reports/top10-events', [AdminReportController::class, 'top10Events']);
         Route::get('/admin/events/{event}/export', [AdminReportController::class, 'exportParticipants']);
+        Route::get('/admin/reports/export-all-participants', [AdminReportController::class, 'exportAllParticipants']);
     });
 });

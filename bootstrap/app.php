@@ -16,6 +16,19 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'inactivity' => \App\Http\Middleware\InactivityTimeout::class,
         ]);
+        
+        // Daftarin middleware groups untuk Laravel 12
+        $middleware->group('api', [
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
+        
+        $middleware->group('web', [
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

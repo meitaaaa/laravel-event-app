@@ -45,9 +45,13 @@ class AdminReportController extends Controller
 
     public function exportParticipants(Event $event, Request $r){
         $fmt = $r->get('format','csv'); // csv|xlsx
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\EventParticipantsExport($event),
-            "participants-event-{$event->id}.{$fmt}"
-        );
+        $export = new \App\Exports\EventParticipantsExport($event->id);
+        return $export->export($fmt);
+    }
+
+    public function exportAllParticipants(Request $r){
+        $fmt = $r->get('format','csv'); // csv|xlsx
+        $export = new \App\Exports\EventParticipantsExport();
+        return $export->export($fmt);
     }
 }
