@@ -1,34 +1,39 @@
-# Gunakan image resmi PHP 8.2 dengan Apache
+# Gunakan PHP resmi dengan ekstensi yang dibutuhkan
 FROM php:8.2-apache
 
-# Install ekstensi PHP yang dibutuhkan Laravel
+# Install dependencies dan ekstensi Laravel
 RUN apt-get update && apt-get install -y \
-    git zip unzip libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev \
-    && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
+    git unzip libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libzip-dev zip && \
+    docker-php-ext-install pdo pdo_mysql gd mbstring zip exif pcntl
 
-# Aktifkan mod_rewrite agar route Laravel berfungsi
-RUN a2enmod rewrite
+# Copy semua file project ke dalam container
+COPY . /var/www/html
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy semua file Laravel ke dalam container
-COPY . .
-
 # Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install semua dependency Laravel
+# Install dependency Laravel
 RUN composer install --no-dev --optimize-autoloader
 
-# Generate key Laravel (optional, Render bisa generate juga)
-RUN php artisan key:generate || true
-
-# Set permission untuk folder storage dan bootstrap
+# Set permission
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Jalankan Laravel menggunakan artisan serve
-CMD php artisan serve --host=0.0.0.0 --port=10000
+# Ubah Apache DocumentRoot ke folder public Laravel
+RUN sed -i 's|/var/www/html|/var/www/html/public|' /etc/apache2/sites-available/000-default.conf
 
-# Expose port 10000
-EXPOSE 10000
+# Aktifkan mod_rewrite untuk Laravel route
+RUN a2enmod rewrite
+RUN echo "<Directory /var/www/html/public>\n\
+    AllowOverride All\n\
+</Directory>" >> /etc/apache2/apache2.conf
+
+# Generate key otomatis (opsional)
+RUN php artisan key:generate
+
+# Jalankan Apache di port 8080 (Railway otomatis detect)
+EXPOSE 8080
+
+CMD ["apache2-foreground"]
