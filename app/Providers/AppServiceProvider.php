@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\Registration;
+use App\Observers\RegistrationObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register RegistrationObserver to monitor and protect attendance_token
+        Registration::observe(RegistrationObserver::class);
     }
 }

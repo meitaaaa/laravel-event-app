@@ -13,8 +13,13 @@ class Registration extends Model
         'user_id',
         'event_id',
         'token_hash',
+        'token_plain',
         'token_sent_at',
-        'status'
+        'status',
+        'name',
+        'email',
+        'phone',
+        'motivation'
     ];
 
     protected $casts = [
@@ -38,6 +43,11 @@ class Registration extends Model
 
     public function certificate()
     {
-        return $this->hasOne(Certificate::class);
+        return $this->hasOne(Certificate::class)->latest();
+    }
+
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
     }
 }

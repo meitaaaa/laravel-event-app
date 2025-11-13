@@ -17,6 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'inactivity' => \App\Http\Middleware\InactivityTimeout::class,
         ]);
         
+        // Enable CORS untuk React frontend
+        $middleware->api(prepend: [
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
+        
         // Daftarin middleware groups untuk Laravel 12
         $middleware->group('api', [
             \Illuminate\Routing\Middleware\SubstituteBindings::class,

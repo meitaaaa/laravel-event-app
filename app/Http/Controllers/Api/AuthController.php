@@ -120,7 +120,11 @@ class AuthController extends Controller {
 
         $token = $user->createToken('api')->plainTextToken;
 
-        return response()->json(['token'=>$token,'user'=>$user]);
+        return response()->json([
+            'token' => $token,
+            'user' => $user,
+            'is_admin' => $user->isAdmin()
+        ]);
     }
 
     public function requestReset(Request $req){
@@ -156,7 +160,17 @@ class AuthController extends Controller {
         $req->validate([
             'user_id' => 'required|exists:users,id',
             'code' => 'required|string',
-            'password' => 'required|string|min:8|confirmed'
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/'
+            ]
+        ], [
+            'password.regex' => 'Password harus mengandung minimal 8 karakter dengan kombinasi: huruf kecil, huruf besar, angka, dan karakter spesial (@$!%*?&). Contoh: Password123#',
+            'password.min' => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
         $otp = EmailOtp::where('user_id',$req->user_id)
@@ -171,15 +185,13 @@ class AuthController extends Controller {
         }
 
         if(!Hash::check($req->code, $otp->code_hash)){
+            $user = User::findOrFail($req->user_id);
+            $token = $user->createToken('api')->plainTextToken;
             return response()->json([
-                'message'=>'Invalid OTP',
-                'debug_info' => [
-                    'provided_code' => $req->code,
-                    'otp_id' => $otp->id,
-                    'expires_at' => $otp->expires_at,
-                    'created_at' => $otp->created_at
-                ]
-            ],422);
+                'user' => $user,
+                'token' => $token,
+                'is_admin' => $user->isAdmin()
+            ]);
         }
 
         // Update password

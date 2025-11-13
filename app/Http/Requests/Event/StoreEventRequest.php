@@ -11,7 +11,8 @@ class StoreEventRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        // Only allow authenticated users (admin) to create events
+        return auth()->check();
     }
 
     /**
@@ -28,6 +29,7 @@ class StoreEventRequest extends FormRequest
         'start_time'=>'required|date_format:H:i',
         'end_time'=>'nullable|date_format:H:i|after:start_time',
         'location'=>'required|string|max:200',
+        'category'=>'required|string|in:teknologi,seni_budaya,olahraga,akademik,sosial',
         'is_published'=>'boolean',
         'flyer'=>'nullable|image|max:2048',
         'certificate_template'=>'nullable|mimes:pdf,jpg,png|max:4096',

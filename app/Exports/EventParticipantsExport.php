@@ -28,7 +28,7 @@ class EventParticipantsExport
 
     protected function getData()
     {
-        $query = Registration::with(['user', 'event', 'attendance', 'certificate']);
+        $query = Registration::with(['user', 'event', 'attendance', 'certificate', 'payment']);
         
         if ($this->eventId) {
             $query->where('event_id', $this->eventId);
@@ -48,6 +48,9 @@ class EventParticipantsExport
             'Nama Peserta',
             'Email',
             'Nama Event',
+            'Harga Tiket',
+            'Status Pembayaran',
+            'Jumlah Dibayar',
             'Status Registrasi',
             'Tanggal Registrasi',
             'Status Kehadiran',
@@ -57,12 +60,28 @@ class EventParticipantsExport
 
         $csvContent = $this->arrayToCsv($headers);
         
+        $totalRevenue = 0;
+        $paidCount = 0;
+        
         foreach ($data as $registration) {
+            $eventPrice = $registration->event->is_free ? 0 : ($registration->event->price ?? 0);
+            $paymentAmount = $registration->payment && $registration->payment->isPaid() 
+                ? $registration->payment->amount 
+                : 0;
+            
+            if ($paymentAmount > 0) {
+                $totalRevenue += $paymentAmount;
+                $paidCount++;
+            }
+            
             $row = [
                 $registration->id,
                 $registration->user->name ?? 'N/A',
                 $registration->user->email ?? 'N/A',
                 $registration->event->title ?? 'N/A',
+                $registration->event->is_free ? 'Gratis' : 'Rp ' . number_format($eventPrice, 0, ',', '.'),
+                $this->getPaymentStatus($registration->payment),
+                $paymentAmount > 0 ? 'Rp ' . number_format($paymentAmount, 0, ',', '.') : 'Rp 0',
                 $this->getStatusText($registration->status),
                 $registration->created_at->format('d/m/Y H:i'),
                 $registration->attendance ? 'Hadir' : 'Tidak Hadir',
@@ -72,6 +91,13 @@ class EventParticipantsExport
             
             $csvContent .= $this->arrayToCsv($row);
         }
+        
+        // Add summary rows
+        $csvContent .= "\n";
+        $csvContent .= $this->arrayToCsv(['RINGKASAN']);
+        $csvContent .= $this->arrayToCsv(['Total Peserta', count($data)]);
+        $csvContent .= $this->arrayToCsv(['Total Peserta Berbayar', $paidCount]);
+        $csvContent .= $this->arrayToCsv(['Total Pendapatan', 'Rp ' . number_format($totalRevenue, 0, ',', '.')]);
 
         return response($csvContent)
             ->header('Content-Type', 'text/csv; charset=UTF-8')
@@ -101,5 +127,22 @@ class EventParticipantsExport
         ];
 
         return $statusMap[$status] ?? $status;
+    }
+    
+    private function getPaymentStatus($payment)
+    {
+        if (!$payment) {
+            return 'Belum Bayar';
+        }
+        
+        $statusMap = [
+            'pending' => 'Menunggu Pembayaran',
+            'paid' => 'Lunas',
+            'failed' => 'Gagal',
+            'expired' => 'Kadaluarsa',
+            'cancelled' => 'Dibatalkan'
+        ];
+        
+        return $statusMap[$payment->status] ?? $payment->status;
     }
 }

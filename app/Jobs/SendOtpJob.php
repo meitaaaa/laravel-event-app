@@ -32,12 +32,15 @@ class SendOtpJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $subject = $this->type === 'verification' ? 'Email Verification OTP' : 'Password Reset OTP';
-        $message = $this->type === 'verification' 
-            ? "Your email verification OTP is: {$this->otp}. Valid for 10 minutes."
-            : "Your password reset OTP is: {$this->otp}. Valid for 10 minutes.";
+        $subject = $this->type === 'verification' 
+            ? 'Verifikasi Email - EduFest' 
+            : 'Reset Password - EduFest';
 
-        Mail::raw($message, function ($mail) use ($subject) {
+        Mail::send('emails.otp', [
+            'user' => $this->user,
+            'otp' => $this->otp,
+            'type' => $this->type
+        ], function ($mail) use ($subject) {
             $mail->to($this->user->email, $this->user->name)
                  ->subject($subject);
         });

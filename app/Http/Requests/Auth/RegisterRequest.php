@@ -23,18 +23,26 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:100',
-        'email' => 'required|email|unique:users,email',
-        'phone' => 'required|string|max:20',
-        'address' => 'required|string|max:255',
-        'education' => 'required|in:SD,SMP,SMA,SMK,D3,S1,S2,S3',
-        'password' => [
-            'required','string','min:8',
-            'regex:/[A-Z]/',        // huruf besar
-            'regex:/[a-z]/',        // huruf kecil
-            'regex:/[0-9]/',        // angka
-            'regex:/[\W_]/',        // karakter spesial
-            'confirmed'             // konfirmasi password
-        ],
-    ];
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'required|string|max:20',
+            'address' => 'required|string|max:255',
+            'education' => 'required|in:SD,SMP,SMA,SMK,D3,S1,S2,S3',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/'
+            ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'password.regex' => 'Password harus mengandung minimal 8 karakter dengan kombinasi: huruf kecil, huruf besar, angka, dan karakter spesial (@$!%*?&). Contoh: Password123#',
+            'password.min' => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+        ];
     }
 }

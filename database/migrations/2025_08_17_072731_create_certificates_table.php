@@ -10,15 +10,15 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {Schema::create('certificates', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('registration_id')->constrained()->cascadeOnDelete();
-        $table->string('serial_number')->unique();
-        $table->string('file_path');    // pdf
-        $table->timestamp('issued_at');
-    });
-    
-        
+    {
+        Schema::create('certificates', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('registration_id')->constrained()->cascadeOnDelete();
+            $table->string('serial_number')->unique();
+            $table->string('file_path');    // pdf
+            $table->timestamp('issued_at');
+            $table->timestamps();
+        });
     }
 
     /**
